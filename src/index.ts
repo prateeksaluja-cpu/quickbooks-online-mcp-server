@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import express from 'express';
+import cors from 'cors';
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { QuickbooksMCPServer } from "./server/qbo-mcp-server.js";
@@ -439,6 +440,7 @@ const main = async () => {
 
 async function runServer() {
   const app = express();
+  app.use(cors());
   app.use(express.json()); 
 
   let transport: SSEServerTransport;
