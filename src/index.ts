@@ -443,11 +443,23 @@ async function runServer() {
   app.use(cors());
   app.use(express.json()); 
 
-  let transport: SSEServerTransport;
+  let transport: SSEServerTransport | null = null;
 
   app.get('/mcp', async (req: any, res: any) => {
-    transport = new SSEServerTransport('[https://quickbooks-online-mcp-server-5o0a.onrender.com/message](https://quickbooks-online-mcp-server-5o0a.onrender.com/message)', res);
-    await server.connect(transport);
+    // 1. Clean up any previous "test" connections from Gemini
+    if (transport) {
+      try { await transport.close(); } catch (e) {}
+    }
+    
+    // 2. Open the new connection
+    transport = new SSEServerTransport('https://quickbooks-online-mcp-server-5o0a.onrender.com/message', res);
+    
+    // 3. Connect without crashing if it checks twice
+    try {
+      await server.connect(transport);
+    } catch (error: any) {
+      console.error("Connection update:", error.message);
+    }
   });
 
   app.post('/message', async (req: any, res: any) => {
