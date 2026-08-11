@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-
+import express from 'express';
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { QuickbooksMCPServer } from "./server/qbo-mcp-server.js";
 // import { ListInvoicesTool } from "./tools/list-invoices.tool.js";
@@ -435,8 +436,6 @@ const main = async () => {
   RegisterTool(server, GetVendorBalanceTool);
 
   // Start receiving messages on stdin and sending messages on stdout
-import express from 'express';
-import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 
 async function runServer() {
   const app = express();
