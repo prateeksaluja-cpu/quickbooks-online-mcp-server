@@ -438,7 +438,7 @@ const main = async () => {
 
   // Start receiving messages on stdin and sending messages on stdout
 
-aasync function runServer() {
+async function runServer() {
   const app = express();
   app.use(cors());
   app.use(express.json()); 
