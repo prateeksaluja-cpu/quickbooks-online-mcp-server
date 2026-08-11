@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import express from 'express';
 import cors from 'cors';
-import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { QuickbooksMCPServer } from "./server/qbo-mcp-server.js";
 // import { ListInvoicesTool } from "./tools/list-invoices.tool.js";
@@ -438,24 +438,21 @@ const main = async () => {
 
   // Start receiving messages on stdin and sending messages on stdout
 
-async function runServer() {
+aasync function runServer() {
   const app = express();
   app.use(cors());
   app.use(express.json()); 
 
-  // Gemini uses StreamableHTTP via a single POST request
-  app.post('/mcp', async (req: any, res: any) => {
-    try {
-      const transport = new StreamableHTTPServerTransport();
-      await server.connect(transport);
-      await transport.handleRequest(req, res, req.body);
-      
-      // Clean up connection when finished
-      req.on('close', () => {
-        transport.close();
-      });
-    } catch (error) {
-      console.error("Error handling MCP request:", error);
+  let transport: SSEServerTransport;
+
+  app.get('/mcp', async (req: any, res: any) => {
+    transport = new SSEServerTransport('/message', res);
+    await server.connect(transport);
+  });
+
+  app.post('/message', async (req: any, res: any) => {
+    if (transport) {
+      await transport.handlePostMessage(req, res);
     }
   });
 
