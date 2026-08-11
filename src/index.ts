@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import express from 'express';
 import cors from 'cors';
-import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { QuickbooksMCPServer } from "./server/qbo-mcp-server.js";
 // import { ListInvoicesTool } from "./tools/list-invoices.tool.js";
@@ -443,16 +443,19 @@ async function runServer() {
   app.use(cors());
   app.use(express.json()); 
 
-  let transport: SSEServerTransport;
-
-  app.get('/mcp', async (req, res) => {
-    transport = new SSEServerTransport('/message', res);
-    await server.connect(transport);
-  });
-
-  app.post('/message', async (req, res) => {
-    if (transport) {
-      await transport.handlePostMessage(req, res);
+  // Gemini uses StreamableHTTP via a single POST request
+  app.post('/mcp', async (req: any, res: any) => {
+    try {
+      const transport = new StreamableHTTPServerTransport();
+      await server.connect(transport);
+      await transport.handleRequest(req, res, req.body);
+      
+      // Clean up connection when finished
+      req.on('close', () => {
+        transport.close();
+      });
+    } catch (error) {
+      console.error("Error handling MCP request:", error);
     }
   });
 
