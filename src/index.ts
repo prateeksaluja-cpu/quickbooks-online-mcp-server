@@ -446,7 +446,7 @@ async function runServer() {
   let transport: SSEServerTransport;
 
   app.get('/mcp', async (req: any, res: any) => {
-    transport = new SSEServerTransport('/message', res);
+    transport = new SSEServerTransport('[https://quickbooks-online-mcp-server-5o0a.onrender.com/message](https://quickbooks-online-mcp-server-5o0a.onrender.com/message)', res);
     await server.connect(transport);
   });
 
