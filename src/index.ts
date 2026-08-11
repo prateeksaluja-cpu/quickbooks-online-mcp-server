@@ -435,8 +435,33 @@ const main = async () => {
   RegisterTool(server, GetVendorBalanceTool);
 
   // Start receiving messages on stdin and sending messages on stdout
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
+import express from 'express';
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
+
+async function runServer() {
+  const app = express();
+  app.use(express.json()); 
+
+  let transport: SSEServerTransport;
+
+  app.get('/mcp', async (req, res) => {
+    transport = new SSEServerTransport('/message', res);
+    await server.connect(transport);
+  });
+
+  app.post('/message', async (req, res) => {
+    if (transport) {
+      await transport.handlePostMessage(req, res);
+    }
+  });
+
+  const port = process.env.PORT || 3000;
+  app.listen(port, () => {
+    console.log(`QuickBooks MCP Server listening on port ${port} at /mcp`);
+  });
+}
+
+runServer().catch(console.error);
 };
 
 main().catch((error) => {
